@@ -1,0 +1,837 @@
+
+```html
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>一起做一个蛋糕吧</title>
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  body {
+    background: url('背景3.png') no-repeat center center fixed;
+    background-size: cover;
+    font-family: "Microsoft YaHei", sans-serif;
+    overflow: hidden;
+    cursor: default;
+    user-select: none;
+  }
+
+  .game-container {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  /* 返回按钮 */
+  #back-btn {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    width: 60px;
+    height: 60px;
+    background: url('返回.png') no-repeat center center;
+    background-size: contain;
+    cursor: pointer;
+    z-index: 100;
+    transition: transform 0.3s;
+  }
+
+  #back-btn:hover {
+    transform: scale(1.1);
+  }
+
+  /* 进度指示 */
+  #progress {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    color: white;
+    font-size: 20px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    z-index: 100;
+  }
+
+  /* 蛋糕展示区域 */
+  #cake-display {
+    position: absolute;
+    left: 15%;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 500px;
+    height: 600px;
+    z-index: 10;
+  }
+
+  .cake-layer {
+    position: absolute;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center bottom;
+    width: 900px;
+    left: -50px;
+  }
+
+  #layer1 { bottom: 500px; height: 600px; }
+  #layer2 { bottom: 200px; height: 600px; display: none; }
+  #layer3 { bottom: 320px; height: 600px; display: none; }
+
+  .cake-coating {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center bottom;
+  }
+
+  .top-decoration {
+    position: absolute;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    width: 480px;
+    height: 480px;
+  }
+
+  .side-decoration {
+    position: absolute;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    width: 60px;
+    height: 60px;
+  }
+
+  /* 控制面板 */
+  #control-panel {
+    position: absolute;
+    right: 10%;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 400px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    z-index: 20;
+  }
+
+  .control-group {
+    margin-bottom: 25px;
+  }
+
+  .control-title {
+    font-size: 18px;
+    color: #8B4513;
+    margin-bottom: 10px;
+    font-weight: bold;
+  }
+
+  .option-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .option {
+    width: 70px;
+    height: 70px;
+    border-radius: 10px;
+    border: 3px solid transparent;
+    cursor: pointer;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    transition: all 0.3s;
+  }
+  /* ====== 新增：分组样式 ====== */
+
+/* 分组样式 */
+.decor-group {
+  margin-bottom: 20px;
+  padding: 15px;
+  background: rgba(255, 250, 240, 0.8);
+  border-radius: 12px;
+  border: 2px solid #FFDAB9;
+}
+
+.group-title {
+  font-size: 16px;
+  color: #8B4513;
+  margin-bottom: 10px;
+  font-weight: bold;
+  padding-left: 5px;
+}
+
+/* 互斥选择效果 */
+.option[data-group] {
+  border: 3px solid #D2B48C;
+}
+
+.option[data-group].selected {
+  border-color: #FF6B6B;
+  box-shadow: 0 0 12px rgba(255, 107, 107, 0.6);
+  position: relative;
+}
+
+.option[data-group].selected::after {
+  content: '✓';
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 24px;
+  height: 24px;
+  background: #FF6B6B;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+  .option:hover {
+    transform: scale(1.05);
+    border-color: #FF9E9E;
+  }
+
+  .option.selected {
+    border-color: #FF6B6B;
+    box-shadow: 0 0 10px rgba(255, 107, 107, 0.5);
+  }
+
+  /* 层数控制 */
+  .layer-control {
+    display: flex;
+    gap: 15px;
+  }
+
+  .layer-btn {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: #FFD166;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+
+  .layer-btn:hover {
+    background: #FFB347;
+    transform: scale(1.1);
+  }
+
+  .layer-btn.active {
+    background: #FF6B6B;
+    box-shadow: 0 0 15px rgba(255, 107, 107, 0.7);
+  }
+
+  /* 顶部装饰区域 */
+  .top-decorations {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-top: 10px;
+  }
+
+  .top-decor-item {
+    width: 60px;
+    height: 60px;
+    cursor: pointer;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    opacity: 0.7;
+  }
+
+  .top-decor-item.selected {
+    opacity: 1;
+    transform: scale(1.1);
+    border: 2px solid #FF6B6B;
+    border-radius: 10px;
+  }
+
+  /* 完成按钮 */
+  #ok-btn {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 120px;
+    height: 50px;
+    background: linear-gradient(145deg, #FF9E9E, #FF6B6B);
+    border: none;
+    border-radius: 25px;
+    color: white;
+    font-size: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+    transition: all 0.3s;
+    z-index: 100;
+  }
+
+  #ok-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(255, 107, 107, 0.6);
+  }
+
+  #ok-btn:active {
+    transform: translateY(0);
+  }
+
+  /* 装饰计数 */
+  .counter {
+    display: inline-block;
+    width: 25px;
+    height: 25px;
+    background: #FF6B6B;
+    color: white;
+    border-radius: 50%;
+    text-align: center;
+    line-height: 25px;
+    font-size: 14px;
+    margin-left: 5px;
+  }
+
+  /* 步骤提示 */
+  .step-hint {
+    position: fixed;
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255, 255, 255, 0.9);
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-size: 16px;
+    color: #8B4513;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    z-index: 50;
+  }
+</style>
+</head>
+<body>
+
+<div class="game-container">
+  <!-- 返回按钮 -->
+  <div id="back-btn" title="返回上一页"></div>
+  
+  <!-- 进度指示 -->
+  <div id="progress">第四页：蛋糕制作</div>
+  
+  <!-- 蛋糕展示区域 -->
+  <div id="cake-display">
+    <!-- 蛋糕层 -->
+    <div id="layer1" class="cake-layer">
+      <div id="coating1" class="cake-coating"></div>
+      <div id="side-decor1" class="side-decoration"></div>
+    </div>
+    <div id="layer2" class="cake-layer">
+      <div id="coating2" class="cake-coating"></div>
+      <div id="side-decor2" class="side-decoration"></div>
+    </div>
+    <div id="layer3" class="cake-layer">
+      <div id="coating3" class="cake-coating"></div>
+    </div>
+    
+    <!-- 顶部装饰容器 -->
+    <div id="top-decorations-container"></div>
+  </div>
+  
+    <!-- 控制面板 -->
+  <div id="control-panel">
+    <!-- 步骤1：选择层数 -->
+    <div class="control-group">
+      <div class="control-title">1. 选择蛋糕层数</div>
+      <div class="layer-control">
+        <div class="layer-btn active" data-layers="1">1</div>
+        <div class="layer-btn" data-layers="2">2</div>
+        <div class="layer-btn" data-layers="3">3</div>
+      </div>
+    </div>
+    
+    <!-- 步骤2：选择涂层 -->
+    <div class="control-group">
+      <div class="control-title">2. 选择蛋糕涂层</div>
+      <div class="option-list">
+        <div class="option selected" data-coating="white" style="background-image: url('白涂层.png');"></div>
+        <div class="option" data-coating="yellow" style="background-image: url('黄涂层.png');"></div>
+        <div class="option" data-coating="blue" style="background-image: url('蓝涂层.png');"></div>
+           <div class="option" data-coating="pink" style="background-image: url('粉涂层.png');"></div>
+      </div>
+    </div>
+    
+    <!-- 步骤3：添加顶部装饰 -->
+    <div class="control-group">
+      <div class="control-title">
+        3. 添加顶部装饰 <span id="top-decor-count" class="counter">0</span>/3
+      </div>
+            <!-- 第1组：奶油类（互斥） -->
+      <div class="decor-group">
+        <div class="group-title">奶油涂层</div>
+        <div class="option-list">
+          <div class="option" data-group="cream" data-decor="cream-white" style="background-image: url('白奶油.png');"></div>
+          <div class="option" data-group="cream" data-decor="cream-yellow" style="background-image: url('黄奶油.png');"></div>
+          <div class="option" data-group="cream" data-decor="cream-blue" style="background-image: url('蓝奶油.png');"></div>
+          <div class="option" data-group="cream" data-decor="cream-pink" style="background-image: url('粉奶油.png');"></div>
+        </div>
+      </div>
+      
+      <!-- 第2组：动物/角色类（互斥） -->
+      <div class="decor-group">
+        <div class="group-title">可爱角色</div>
+        <div class="option-list">
+          <div class="option" data-group="character" data-decor="dog" style="background-image: url('顶-小狗.png');"></div>
+          <div class="option" data-group="character" data-decor="snowman" style="background-image: url('顶-雪人.png');"></div>
+        </div>
+      </div>
+      
+      <!-- 第3组：装饰品类（互斥） -->
+      <div class="decor-group">
+        <div class="group-title">精致装饰</div>
+        <div class="option-list">
+          <div class="option" data-group="decoration" data-decor="heart-red" style="background-image: url('顶-红心.png');"></div>
+          <div class="option" data-group="decoration" data-decor="sunflower" style="background-image: url('顶-向日葵.png');"></div>
+          <div class="option" data-group="decoration" data-decor="snowflake" style="background-image: url('顶-雪花.png');"></div>
+        </div>
+      </div>
+    </div>
+    <!-- 步骤4：添加侧面装饰 -->
+    <div class="control-group">
+      <div class="control-title">
+        4. 添加侧面装饰 <span id="side-decor-count" class="counter">0</span>/<span id="max-side-decor">1</span>
+      </div>
+      <div class="option-list">
+        <div class="option" data-side="cream-white" style="background-image: url('白奶油.png');"></div>
+        <div class="option" data-side="snowflake" style="background-image: url('顶-雪花.png');"></div>
+        <div class="option" data-side="flower" style="background-image: url('顶-向日葵.png');"></div>
+        <div class="option" data-side="heart" style="background-image: url('顶-红心.png');"></div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 步骤提示 -->
+  <div class="step-hint" id="step-hint">请选择蛋糕层数</div>
+  
+  <!-- 完成按钮 -->
+  <button id="ok-btn" disabled type="">OK</button>
+</div>
+
+<script>
+// 游戏状态
+const gameState = {
+  layers: 1,
+  coating: 'white',
+  topDecorations: {    // ← 改为对象结构
+    cream: null,      // 'cream-white' | 'cream-yellow' | 'cream-blue' | 'cream-pink' | null
+    character: null,  // 'dog' | 'snowman' | null
+    decoration: null  // 'heart-red' | 'sunflower' | 'snowflake' | null
+  },
+  sideDecorations: {},
+  step: 1
+};
+
+// DOM元素
+const backBtn = document.getElementById('back-btn');
+const layerBtns = document.querySelectorAll('.layer-btn');
+const coatingOptions = document.querySelectorAll('.option[data-coating]');
+const sideOptions = document.querySelectorAll('.option[data-side]');
+const okBtn = document.getElementById('ok-btn');
+// 设置按钮类型，防止表单提交行为
+okBtn.type = 'button';
+const stepHint = document.getElementById('step-hint');
+const topDecorCount = document.getElementById('top-decor-count');
+const sideDecorCount = document.getElementById('side-decor-count');
+const maxSideDecor = document.getElementById('max-side-decor');
+
+// 蛋糕层元素
+const layer1 = document.getElementById('layer1');
+const layer2 = document.getElementById('layer2');
+const layer3 = document.getElementById('layer3');
+const coating1 = document.getElementById('coating1');
+const coating2 = document.getElementById('coating2');
+const coating3 = document.getElementById('coating3');
+const sideDecor1 = document.getElementById('side-decor1');
+const sideDecor2 = document.getElementById('side-decor2');
+const topDecorContainer = document.getElementById('top-decorations-container');
+
+// 图片映射表
+const imageMap = {
+  // 涂层
+  coating: {
+    white: '白糕.png',
+    yellow: '黄糕.png',
+    blue: '蓝糕.png',
+    pink: '粉糕.png'
+  },
+  // 顶部装饰
+  top: {
+    'cream-white': '上白奶油.png',
+    'cream-yellow': '上黄奶油.png',
+    'cream-blue': '上蓝奶油.png',
+    'cream-pink': '上粉奶油.png',
+    'heart-red': '上红心.png',
+    'snowman': '上雪人.png',
+    'snowflake': '上雪花.png',
+    'dog': '上小狗.png',
+    'sunflower': '上向日葵.png'
+  },
+  // 侧面装饰
+  side: {
+    'cream-white': '侧奶油.png',
+    'snowflake': '侧雪花.png',
+    'flower': '侧黄花.png',
+    'heart': '侧红心.png'
+  }
+};
+
+// 返回上一页
+backBtn.addEventListener('click', () => {
+  window.location.href = 'page3.html';
+});
+
+// 选择层数
+layerBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    // 移除所有active类
+    layerBtns.forEach(b => b.classList.remove('active'));
+    // 添加active类
+    btn.classList.add('active');
+    
+    // 更新层数
+    gameState.layers = parseInt(btn.dataset.layers);
+    gameState.step = 2;
+    updateStepHint();
+    updateCakeLayers();
+    updateSideDecorLimit();
+    checkStepCompletion();
+  });
+});
+
+// 选择涂层
+coatingOptions.forEach(option => {
+  option.addEventListener('click', () => {
+    // 移除所有selected类
+    coatingOptions.forEach(opt => opt.classList.remove('selected'));
+    // 添加selected类
+    option.classList.add('selected');
+
+    // 更新涂层
+    gameState.coating = option.dataset.coating;
+    gameState.step = 3;
+    updateStepHint();
+    updateCakeCoating();
+    checkStepCompletion();
+  });
+});
+
+// 分组顶部装饰选择逻辑
+document.querySelectorAll('.option[data-group]').forEach(option => {
+  option.addEventListener('click', () => {
+   
+    const group = option.dataset.group;
+    const decor = option.dataset.decor;
+    
+    // 移除同组其他选项的选中状态
+    document.querySelectorAll(`.option[data-group="${group}"]`).forEach(opt => {
+      opt.classList.remove('selected');
+    });
+    
+    // 如果点击的是已选中的，则取消选择
+    if (gameState.topDecorations[group] === decor) {
+      gameState.topDecorations[group] = null;
+      option.classList.remove('selected');
+    } else {
+      // 选择新的
+      gameState.topDecorations[group] = decor;
+      option.classList.add('selected');
+    }
+    
+    // 更新计数
+    updateTopDecorCount();
+    updateStepHint();
+    updateTopDecorations();
+    checkStepCompletion();
+  });
+});
+
+// 选择侧面装饰
+sideOptions.forEach(option => {
+  option.addEventListener('click', () => {
+    
+    
+    const maxSide = gameState.layers === 3 ? 2 : 1;
+    const sideDecor = option.dataset.side;
+    
+    // 计算当前层应该放哪个装饰
+    let targetLayer;
+    if (gameState.layers === 1) {
+      targetLayer = 1;
+    } else if (gameState.layers === 2) {
+      targetLayer = 1; // 两层蛋糕只在中间放一个
+    } else {
+      // 三层蛋糕需要判断放哪个位置
+      if (!gameState.sideDecorations[1]) {
+        targetLayer = 1;
+       } else if (!gameState.sideDecorations[2]) {
+        targetLayer = 2;
+      } else {
+        // 两个位置都满了，替换第一个
+        targetLayer = 1;
+      }
+    }
+
+    // 更新侧面装饰
+    gameState.sideDecorations[targetLayer] = sideDecor;
+    option.classList.add('selected');
+    
+    // 更新计数
+    const currentCount = Object.keys(gameState.sideDecorations).length;
+    sideDecorCount.textContent = currentCount;
+    
+    updateSideDecorations();
+    checkStepCompletion();
+    
+    // 如果达到最大数量，自动跳到下一步
+    if (currentCount >= maxSide) {
+      okBtn.disabled = false;
+      stepHint.textContent = '完成！点击OK按钮查看你的蛋糕吧！';
+    }
+  });
+});
+
+// 更新蛋糕层显示
+function updateCakeLayers() {
+  layer1.style.display = 'block';
+  layer2.style.display = gameState.layers >= 2 ? 'block' : 'none';
+  layer3.style.display = gameState.layers >= 3 ? 'block' : 'none';
+  
+  // 调整位置
+  if (gameState.layers === 1) {
+    layer1.style.bottom = '-100px';
+  } else if (gameState.layers === 2) {
+    layer1.style.bottom = '-100px';
+    layer2.style.bottom = '-1px';
+  } else {
+    layer1.style.bottom = '-100px';
+    layer2.style.bottom = '-1px';
+    layer3.style.bottom = '98px';
+  }
+}
+
+// 更新蛋糕涂层
+function updateCakeCoating() {
+  const coatingImg = imageMap.coating[gameState.coating];
+  coating1.style.backgroundImage = `url('${coatingImg}')`;
+  coating2.style.backgroundImage = `url('${coatingImg}')`;
+  coating3.style.backgroundImage = `url('${coatingImg}')`;
+}
+
+// 更新顶部装饰计数
+function updateTopDecorCount() {
+  let count = 0;
+  for (const group in gameState.topDecorations) {
+    if (gameState.topDecorations[group]) count++;
+  }
+  document.getElementById('top-decor-count').textContent = count;
+}
+
+// 更新顶部装饰
+function updateTopDecorations() {
+  topDecorContainer.innerHTML = '';
+  
+  // 每组对应的固定位置
+  const groupPositions = {
+    cream: { left: '103%', top: '58.7%', size: '999px' },      // 左下位置
+    character: { left: '96%', top: '57.2%', size: '999px' },  // 右下位置
+    decoration: { left: '101%', top: '58.7%', size: '999px' }  // 正上位置
+  };
+  
+  // 添加选中的装饰
+  for (const [group, decor] of Object.entries(gameState.topDecorations)) {
+    if (decor) {
+      const pos = groupPositions[group];
+      const img = document.createElement('div');
+      img.className = 'top-decoration';
+      img.style.backgroundImage = `url('${imageMap.top[decor]}')`;
+      img.style.left = pos.left;
+      img.style.top = pos.top;
+      img.style.width = pos.size;
+      img.style.height = pos.size;
+      img.style.transform = 'translate(-50%, -50%)';
+      img.style.zIndex = getGroupZIndex(group);
+      
+      topDecorContainer.appendChild(img);
+    }
+  }
+}
+
+// 设置层级（确保装饰在最上面）
+function getGroupZIndex(group) {
+  const order = { decoration: 30, character: 20, cream: 10 };
+  return order[group] || 10;
+}
+
+// 更新侧面装饰
+function updateSideDecorations() {
+  // 重置所有侧面装饰
+  sideDecor1.style.backgroundImage = '';
+  sideDecor2.style.backgroundImage = '';
+  
+  // 更新显示
+  Object.keys(gameState.sideDecorations).forEach(layer => {
+    const decor = gameState.sideDecorations[layer];
+    const decorImg = imageMap.side[decor];
+    
+    if (layer == 1 && sideDecor1) {
+      sideDecor1.style.backgroundImage = `url('${decorImg}')`;
+      sideDecor1.style.left = '50%';
+      sideDecor1.style.transform = 'translateX(-50%)';
+    } else if (layer == 2 && sideDecor2) {
+      sideDecor2.style.backgroundImage = `url('${decorImg}')`;
+      sideDecor2.style.left = '50%';
+      sideDecor2.style.transform = 'translateX(-50%)';
+    }
+  });
+}
+
+// 更新侧面装饰限制
+function updateSideDecorLimit() {
+  const max = gameState.layers === 3 ? 2 : 1;
+  maxSideDecor.textContent = max;
+}
+
+// 更新步骤提示
+function updateStepHint() {
+  const hints = [
+    '选择蛋糕层数',
+    '选择蛋糕涂层',
+    '添加顶部装饰（每组可选一个）',
+    '添加侧面装饰',
+    '完成！点击OK看看胖虎的蛋糕吧！'
+  ];
+  stepHint.textContent = hints[gameState.step - 1] || hints[0];
+}
+
+function checkStepCompletion() {
+  console.log('检查步骤完成情况');  // 修复：改为 console.log
+
+  let allComplete = true;
+
+  // 只检查最基本的要求
+  if (gameState.layers === 0) {
+    allComplete = false;
+  }
+
+  if (!gameState.coating) {
+    allComplete = false;
+  }
+
+  // 顶部装饰可选，不强制要求
+
+  okBtn.disabled = !allComplete;
+
+  if (allComplete) {
+    console.log('基本要求完成，OK按钮已启用');
+  } else {
+    console.log('请至少选择层数和涂层');
+  }
+
+  return allComplete;
+}
+
+// OK按钮点击事件
+
+okBtn.addEventListener('click', () => {
+  console.log('OK按钮被点击，开始保存数据');
+  
+  // 准备保存的数据结构
+  const saveData = {
+    layers: gameState.layers,
+    coating: gameState.coating,
+    topDecorations: gameState.topDecorations,
+    sideDecorations: gameState.sideDecorations,
+    flatTopDecorations: []
+  };
+
+  // 将分组数据扁平化
+  for (const [group, decor] of Object.entries(gameState.topDecorations)) {
+    if (decor) {
+      saveData.flatTopDecorations.push({
+        type: decor,
+        group: group,
+        position: group
+      });
+    }
+  }
+  
+  console.log('要保存的数据:', saveData);
+  
+  // 保存到localStorage
+  try {
+    localStorage.setItem('birthdayCake', JSON.stringify(saveData));
+    console.log('localStorage保存成功');
+    
+    // 立即跳转
+    console.log('立即跳转到 page5.html');
+    window.location.href = 'page5.html';
+    
+  } catch (error) {
+    console.error('localStorage保存失败:', error);
+    alert('保存失败：' + error.message);
+  }
+});
+
+// 恢复之前的选择（可选）
+function restoreSelections() {
+  const saved = localStorage.getItem('birthdayCake');
+  if (saved) {
+    try {
+      const data = JSON.parse(saved);
+      
+      // 恢复分组选择
+      if (data.topDecorations && typeof data.topDecorations === 'object') {
+        for (const [group, decor] of Object.entries(data.topDecorations)) {
+          if (decor) {
+            const option = document.querySelector(`.option[data-group="${group}"][data-decor="${decor}"]`);
+            if (option) {
+              option.classList.add('selected');
+              gameState.topDecorations[group] = decor;
+            }
+          }
+        }
+        updateTopDecorCount();
+        updateTopDecorations();
+      }
+    } catch (e) {
+      console.log('无保存数据或数据损坏');
+    }
+  }
+}
+
+// 页面加载完成后调用
+document.addEventListener('DOMContentLoaded', function() {
+  restoreSelections();
+  updateStepHint();
+  updateSideDecorLimit();
+  updateCakeLayers();
+  updateCakeCoating();
+  updateTopDecorCount();
+});
+</script>
+
+</body>
+</html>
+```

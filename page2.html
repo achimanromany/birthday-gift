@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>手帐互动网页</title>
+<style>
+  /* 全局样式 */
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  body {
+    background: url('背景2.PNG') no-repeat center center fixed;
+    background-size: cover;
+    font-family: "Microsoft YaHei", sans-serif;
+    overflow: hidden;
+    cursor: pointer;
+  }
+
+  /* 页面容器 */
+  .page-container {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  /* 手帐本 */
+  #handbook {
+    position: relative;
+    width: 100%;
+    max-width: 1400px;
+    z-index: 1;
+    animation: bounce 0.6s ease;
+  }
+
+  @keyframes bounce {
+    0% { transform: scale(0.8); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+  }
+
+  /* 手帐纸 */
+  #paper {
+    position: absolute;
+    width: 85.1%;
+    left: 7.2%;
+    top: 50.1%;
+    transform: translateY(-50%);
+    display: none;
+    z-index: 2;
+  }
+
+  /* 装饰物 - 现在每个装饰物有独立样式 */
+  .decor {
+    position: absolute;
+    display: none;
+    z-index: 3;
+    opacity: 0;
+    transition: all 1s ease;
+  }
+
+  /* 装饰1单独样式 */
+  #decor1 {
+    width: 18%;        /* 可以独立调整大小 */
+    max-width: 150px;  /* 独立的最大宽度 */
+  }
+
+  /* 装饰2单独样式 */
+  #decor2 {
+    width: 100%;        /* 可以独立调整大小 */
+    max-width: 1230px;  /* 独立的最大宽度 */
+  }
+
+  /* 装饰3单独样式 */
+  #decor3 {
+    width: 100%;        /* 可以独立调整大小 */
+    max-width: 1280px;  /* 独立的最大宽度 */
+  }
+
+  /* 文字区域 */
+  #text {
+    position: absolute;
+    left: 53%;
+    top: 37%;
+    transform: translateY(-50%);
+    width: 40%;
+    min-width: 200px;
+    display: none;
+    font-size: 20px;
+    font-family: "Comic Sans MS", "华文行楷", cursive;
+    color: #333;
+    white-space: pre-wrap;
+    line-height: 1.6;
+    z-index: 4;
+  }
+
+  /* 跳转箭头 - 改为图片样式 */
+  #arrow {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 480px; /* 设置图片宽度 */
+    height: 480px; /* 设置图片高度 */
+    cursor: pointer;
+    display: none;
+    z-index: 5;
+    transition: all 0.3s ease;
+    /* 添加阴影效果 */
+    filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3));
+  }
+
+  #arrow:hover {
+    transform: scale(1.15);
+    filter: drop-shadow(3px 3px 6px rgba(0,0,0,0.4));
+  }
+
+  /* 呼吸动画效果 */
+  @keyframes breathe {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+  }
+  
+  /* 显示箭头后添加呼吸动画 */
+  #arrow.show {
+    animation: breathe 2s infinite ease-in-out;
+  }
+
+  /* 模拟抖动效果 */
+  .shake {
+    display: inline-block;
+    animation: shake 7.5s infinite;
+  }
+
+  @keyframes shake {
+    0% { transform: translate(0px,0px) rotate(0deg); }
+    25% { transform: translate(1px,-1px) rotate(-1deg); }
+    50% { transform: translate(-1px,1px) rotate(1deg); }
+    75% { transform: translate(1px,1px) rotate(0deg); }
+    100% { transform: translate(0px,-1px) rotate(-1deg); }
+  }
+</style>
+</head>
+<body>
+
+<div class="page-container">
+  <img id="handbook" src="手账底图.PNG" alt="手帐底图">
+  <img id="paper" src="手账纸1.PNG" alt="手帐纸">
+  <img class="decor" id="decor1" src="dec1.PNG" alt="装饰1">
+  <img class="decor" id="decor2" src="dec2.PNG" alt="装饰2">
+  <img class="decor" id="decor3" src="dec3.PNG" alt="装饰3">
+  <div id="text"></div>
+  <!-- 方法1：直接使用img标签替换箭头 -->
+  <img id="arrow" src="跳转.PNG" alt="下一页">
+</div>
+
+<script>
+let step = 0;
+const paper = document.getElementById('paper');
+const decor1 = document.getElementById('decor1');
+const decor2 = document.getElementById('decor2');
+const decor3 = document.getElementById('decor3');
+const textDiv = document.getElementById('text');
+const arrow = document.getElementById('arrow');
+
+// 预格式化文本
+const formattedMessage = [
+  "Dear 璇儿，",
+  "",
+  "今天是你的破壳纪念日！~(๑>◡<๑)",
+  "生日快乐！！！",
+  "",
+  "无论何时何地，",
+  "记得好好吃饭睡觉，",
+  "肉肉is watching you òᆺó"
+];
+
+// 装饰物的最终位置配置
+const decorPositions = {
+  decor1: {
+    left: '56%',
+    top: '40%',
+    rotation: '5deg'
+  },
+  decor2: {
+    left: '12%',
+    top: '7.58%',
+    rotation: '0deg'
+  },
+  decor3: {
+    left: '10%',
+    top: '12%',
+    rotation: '0deg'
+  }
+};
+
+// 打字效果的全局变量
+let lineIndex = 0;
+let charIndex = 0;
+
+// 方法4的打字函数
+function typeWriter() {
+  console.log('typeWriter被调用，lineIndex:', lineIndex, 'charIndex:', charIndex);
+  
+  // 如果还有行要显示
+  if (lineIndex < formattedMessage.length) {
+    const line = formattedMessage[lineIndex];
+    
+    // 如果当前行还有字符要显示
+    if (charIndex < line.length) {
+      // 创建字符span
+      let span = document.createElement('span');
+      span.textContent = line[charIndex];
+      span.className = 'shake';
+      textDiv.appendChild(span);
+      
+      charIndex++;
+      // 继续显示当前行的下一个字符
+      setTimeout(typeWriter, 120);
+    } else {
+      // 当前行显示完毕，添加换行（除了最后一行）
+      if (lineIndex < formattedMessage.length - 1) {
+        textDiv.appendChild(document.createElement('br'));
+      }
+      
+      // 移动到下一行
+      lineIndex++;
+      charIndex = 0;
+      
+      // 短暂延迟后开始下一行
+      setTimeout(typeWriter, 200);
+    }
+  } else {
+    // 所有文字显示完毕
+    console.log('所有文字显示完毕');
+    setTimeout(() => {
+      arrow.style.display = 'block';
+      arrow.classList.add('show'); // 添加呼吸动画
+    }, 500);
+  }
+}
+
+// 点击事件
+document.body.addEventListener('click', () => {
+  step++;
+  console.log('点击步骤:', step);
+
+  if(step === 1){
+    // 显示手帐纸
+    paper.style.display = 'block';
+  } 
+  else if(step === 2){
+    // 装饰物依次出现
+    setTimeout(() => {
+      decor1.style.display = 'block';
+      decor1.style.left = decorPositions.decor1.left;
+      decor1.style.top = decorPositions.decor1.top;
+      decor1.style.transform = `rotate(${decorPositions.decor1.rotation})`;
+      decor1.style.opacity = '1';
+    }, 0);
+
+    setTimeout(() => {
+      decor2.style.display = 'block';
+      decor2.style.left = decorPositions.decor2.left;
+      decor2.style.top = decorPositions.decor2.top;
+      decor2.style.transform = `rotate(${decorPositions.decor2.rotation})`;
+      decor2.style.opacity = '1';
+    }, 500);
+
+    setTimeout(() => {
+      decor3.style.display = 'block';
+      decor3.style.left = decorPositions.decor3.left;
+      decor3.style.top = decorPositions.decor3.top;
+      decor3.style.transform = `rotate(${decorPositions.decor3.rotation})`;
+      decor3.style.opacity = '1';
+    }, 1000);
+  }
+  else if(step === 3){
+    // 显示文字区域
+    console.log('开始显示文字');
+    textDiv.style.display = 'block';
+    textDiv.innerHTML = ''; // 清空内容
+    
+    // 重置打字变量
+    lineIndex = 0;
+    charIndex = 0;
+    
+    // 开始逐行打字效果
+    typeWriter();
+  }
+});
+
+// 点击箭头跳转
+arrow.addEventListener('click', (e) => {
+  e.stopPropagation();
+  window.location.href = 'page3.html';
+});
+
+// 调试工具：按D键显示位置参考线
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'd' || e.key === 'D') {
+    const guide = document.createElement('div');
+    guide.style.position = 'fixed';
+    guide.style.top = '0';
+    guide.style.left = '50%';
+    guide.style.width = '1px';
+    guide.style.height = '100%';
+    guide.style.backgroundColor = 'rgba(255,0,0,0.5)';
+    guide.style.zIndex = '9999';
+    document.body.appendChild(guide);
+    
+    const guide2 = document.createElement('div');
+    guide2.style.position = 'fixed';
+    guide2.style.left = '0';
+    guide2.style.top = '50%';
+    guide2.style.width = '100%';
+    guide2.style.height = '1px';
+    guide2.style.backgroundColor = 'rgba(255,0,0,0.5)';
+    guide2.style.zIndex = '9999';
+    document.body.appendChild(guide2);
+    
+    setTimeout(() => {
+      document.body.removeChild(guide);
+      document.body.removeChild(guide2);
+    }, 3000);
+  }
+});
+
+// 图片加载失败时的备用方案
+arrow.addEventListener('error', function() {
+  console.log('箭头图片加载失败，使用备用方案');
+  // 方法1：显示文字箭头
+  this.alt = '➡';
+  this.style.width = 'auto';
+  this.style.height = 'auto';
+  this.style.fontSize = '32px';
+  this.style.color = '#fff';
+  this.style.textShadow = '2px 2px 4px rgba(0,0,0,0.5)';
+  this.style.display = 'flex';
+  this.style.alignItems = 'center';
+  this.style.justifyContent = 'center';
+  
+
+});
+</script>
+
+</body>
+</html>

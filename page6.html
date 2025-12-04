@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>今夜万籁俱寂</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: "Microsoft YaHei", sans-serif;
+            overflow: hidden;
+            background-color: #000;
+            cursor: default;
+            position: relative;
+            height: 100vh;
+        }
+        
+        /* 背景图片 */
+        #background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('生日背景.png');
+            background-size: cover;
+            background-position: center;
+            opacity: 0;
+            transition: opacity 3s ease;
+            z-index: 1;
+        }
+        
+        /* 交互物容器 */
+        #interactive-items {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+            opacity: 0;
+            transition: opacity 5s ease 4s;
+        }
+        
+        /* 交互物通用样式 */
+        .interactive-item {
+            position: absolute;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            border-radius: 10px;
+        }
+        
+        .interactive-item:hover {
+            transform: scale(1.05);
+        }
+        
+        /* 语音交互物悬停效果 - 修复版 */
+        .voice-item:hover {
+            filter: drop-shadow(0 0 10px rgba(255, 241, 200, 0.8)) !important;
+        }
+        
+        /* 蛋糕悬停效果 */
+        .cake-item:hover {
+            filter: drop-shadow(0 0 15px rgba(255, 209, 102, 0.9));
+        }
+        
+        /* 装饰物 */
+        .decoration-item {
+            position: absolute;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            z-index: 1;
+        }
+        
+        /* 具体位置 - 保持你的数值不变，但添加可点击区域 */
+        #dog {
+            width: 1180px;
+            height: 1180px;
+            top: -16%;
+            left: 5%;
+            background-image: url('小狗.png');
+            /* 确保小狗在点击层 */
+            z-index: 3;
+        }
+        
+        /* 添加小狗的可点击区域（透明覆盖层） */
+        #dog-click-area {
+            position: absolute;
+            width: 300px;      /* 可点击区域宽度 */
+            height: 300px;     /* 可点击区域高度 */
+            top: 60%;          /* 调整到小狗可见部分 */
+            left: 30%;         /* 调整到小狗可见部分 */
+            background-color: transparent;
+            cursor: pointer;
+            z-index: 4;
+            /* 调试时可见，正常时隐藏 */
+            /* border: 2px dashed rgba(255, 0, 0, 0.3); */
+        }
+        
+        #fire {
+            width: 1200px;
+            height: 1150px;
+            bottom: -17%;
+            left: 12%;
+            background-image: url('篝火.png');
+            z-index: 2;
+        }
+        
+        #snowman {
+            width: 1120px;
+            height: 1200px;
+            top: 50%;
+            right: 55%;
+            background-image: url('雪人.png');
+            z-index: 3;
+        }
+        
+        /* 添加雪人的可点击区域 */
+        #snowman-click-area {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            top: 30%;
+            left: 30%;
+            background-color: transparent;
+            cursor: pointer;
+            z-index: 4;
+        }
+        
+        #cat {
+            width: 1520px;
+            height: 1500px;
+            bottom: -35%;
+            right: 3%;
+            background-image: url('小猫.png');
+            z-index: 1;
+        }
+        
+        #pig {
+            width: 1120px;
+            height: 1150px;
+            top: -18%;
+            left: 45%;
+            transform: translateX(-50%);
+            background-image: url('小猪.png');
+            z-index: 3;
+        }
+        
+        /* 添加小猪的可点击区域 */
+        #pig-click-area {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            top: 40%;
+            left: 30%;
+            background-color: transparent;
+            cursor: pointer;
+            z-index: 4;
+        }
+        
+        #cake {
+            width: 650px;
+            height: 600px;
+            top: 35.7%;
+            left: 33.2%;
+            background-image: url('蛋糕1.png');
+            z-index: 5; /* 蛋糕在最上层 */
+        }
+        
+        #stars {
+            width: 300px;
+            height: 200px;
+            top: 10%;
+            right: 5%;
+            background-image: url('星星.png');
+            z-index: 1;
+        }
+        
+        /* 返回按钮 */
+        #back-btn {
+            position: fixed;
+            top: 2px;
+            left: 20px;
+            width: 360px;
+            height: 360px;
+            background: url('返回.png') no-repeat center center;
+            background-size: contain;
+            cursor: pointer;
+            z-index: 10;
+            transition: all 0.3s;
+            opacity: 0.8;
+        }
+        
+        #back-btn:hover {
+            transform: scale(1.1);
+            opacity: 1;
+        }
+        
+        /* 提示文本 */
+        #hint-text {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 18px;
+            text-align: center;
+            z-index: 3;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px 20px;
+            border-radius: 20px;
+            opacity: 0;
+            transition: opacity 1s ease;
+        }
+        
+        /* 音频播放指示器 */
+        .audio-indicator {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            width: 25px;
+            height: 25px;
+            background: rgba(255, 107, 107, 0.9);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 6; /* 在可点击区域之上 */
+        }
+        
+        /* 蛋糕样式指示器 */
+        .cake-indicator {
+            position: absolute;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #FFD166;
+            font-size: 14px;
+            font-weight: bold;
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .cake-item:hover .cake-indicator {
+            opacity: 0.8;
+        }
+        
+        /* 调试用边框 */
+        .debug-border {
+            border: 1px solid red !important;
+        }
+        
+        /* 可点击区域调试模式 */
+        .debug-click-areas .click-area {
+            border: 2px dashed rgba(0, 255, 0, 0.5) !important;
+            background-color: rgba(0, 255, 0, 0.1) !important;
+        }
+    </style>
+</head>
+<body>
+    <!-- 背景图片 -->
+    <div id="background"></div>
+    
+    <!-- 交互物 -->
+    <div id="interactive-items">
+        <!-- 装饰物 -->
+        <div id="stars" class="decoration-item"></div>
+        <div id="cat" class="decoration-item"></div>
+        
+        <!-- 交互物 -->
+        <div id="dog" class="interactive-item voice-item" title="点击听小狗叫">
+            <div class="audio-indicator">♪</div>
+        </div>
+        
+        <!-- 小狗可点击区域 -->
+        <div id="dog-click-area" class="click-area" title="点击听小狗叫"></div>
+        
+        <div id="fire" class="interactive-item" title="篝火"></div>
+        
+        <div id="snowman" class="interactive-item voice-item" title="点击听雪人声音">
+            <div class="audio-indicator">♪</div>
+        </div>
+        
+        <!-- 雪人可点击区域 -->
+        <div id="snowman-click-area" class="click-area" title="点击听雪人声音"></div>
+        
+        <div id="pig" class="interactive-item voice-item" title="点击">
+            <div class="audio-indicator">♪</div>
+        </div>
+        
+        <!-- 小猪可点击区域 -->
+        <div id="pig-click-area" class="click-area" title="点击"></div>
+        
+        <div id="cake" class="interactive-item cake-item" title="点击切换蛋糕样式">
+            <div class="cake-indicator">样式 1/4</div>
+        </div>
+    </div>
+    
+    <!-- 返回按钮 -->
+    <div id="back-btn" title="返回上一页"></div>
+    
+    <!-- 提示文本 -->
+    <div id="hint-text">点击任意位置开始播放背景音乐</div>
+    
+    <script>
+        // ========== 全局变量 ==========
+        let bgmStarted = false;
+        let bgmAudio = null;
+        let currentCakeStyle = 1;
+        const totalCakeStyles = 4;
+        
+        // 音频文件映射
+        const audioFiles = {
+            dog: '小狗音频.mp3',
+            snowman: '雪人音频.mp3',
+            pig: '小狗音频.mp3',
+            bgm: 'BGM.mp3'
+        };
+        
+        // 蛋糕图片映射
+        const cakeImages = {
+            1: '蛋糕1.png',
+            2: '蛋糕2.png',
+            3: '蛋糕3.png',
+            4: '蛋糕4.png'
+        };
+        
+        // ========== DOM元素 ==========
+        const background = document.getElementById('background');
+        const interactiveItems = document.getElementById('interactive-items');
+        const backBtn = document.getElementById('back-btn');
+        const hintText = document.getElementById('hint-text');
+        const cakeElement = document.getElementById('cake');
+        const cakeIndicator = document.querySelector('.cake-indicator');
+        
+        // ========== 初始化 ==========
+        function init() {
+            console.log('第六页初始化 - 保留你的布局数值');
+            
+            // 淡入背景
+            setTimeout(() => {
+                background.style.opacity = '1';
+                
+                // 淡入交互物
+                setTimeout(() => {
+                    interactiveItems.style.opacity = '1';
+                    hintText.style.opacity = '1';
+                    
+                    // 检查元素位置
+                    setTimeout(() => {
+                        console.log('=== 你的布局数值 ===');
+                        console.log('小狗: top: -16%, left: 5%');
+                        console.log('雪人: top: 50%, right: 55%');
+                        console.log('小猪: top: -18%, left: 45%');
+                        console.log('蛋糕: top: 35.7%, left: 33.2%');
+                        
+                        checkElementVisibility();
+                    }, 300);
+                }, 1000);
+            }, 500);
+            
+            // 设置事件监听器
+            setupEventListeners();
+            
+            // 预加载音频
+            preloadAudio();
+        }
+        
+        // ========== 设置事件监听器 ==========
+        function setupEventListeners() {
+            // 返回按钮
+            backBtn.addEventListener('click', () => {
+                stopBGM();
+                window.location.href = 'page5.html';
+            });
+            
+            // 点击任意位置播放BGM
+            document.addEventListener('click', (e) => {
+                // 排除交互物、可点击区域和返回按钮的点击
+                if (e.target.closest('.interactive-item') ||
+                    e.target.closest('.click-area') ||
+                    e.target.closest('#back-btn') ||
+                    e.target.closest('#hint-text')) {
+                    return;
+                }
+                
+                if (!bgmStarted) {
+                    startBGM();
+                }
+            });
+            
+            // 为可点击区域添加事件
+            document.getElementById('dog-click-area').addEventListener('click', (e) => {
+                e.stopPropagation();
+                console.log('通过可点击区域点击了小狗');
+                playVoice('dog');
+            });
+            
+            document.getElementById('snowman-click-area').addEventListener('click', (e) => {
+                e.stopPropagation();
+                console.log('通过可点击区域点击了雪人');
+                playVoice('snowman');
+            });
+            
+            document.getElementById('pig-click-area').addEventListener('click', (e) => {
+                e.stopPropagation();
+                console.log('通过可点击区域点击了小猪');
+                playVoice('pig');
+            });
+            
+            // 蛋糕点击事件（直接使用蛋糕元素）
+            cakeElement.addEventListener('click', (e) => {
+                e.stopPropagation();
+                changeCakeStyle();
+            });
+            
+            // 篝火点击事件（可选）
+            document.getElementById('fire').addEventListener('click', (e) => {
+                e.stopPropagation();
+                console.log('篝火被点击');
+            });
+            
+            // 键盘快捷键
+            document.addEventListener('keydown', (e) => {
+                // ESC返回上一页
+                if (e.key === 'Escape') {
+                    stopBGM();
+                    window.location.href = 'page5.html';
+                }
+                
+                // 空格播放/暂停BGM
+                if (e.key === ' ') {
+                    e.preventDefault();
+                    if (bgmStarted && bgmAudio) {
+                        if (bgmAudio.paused) {
+                            bgmAudio.play();
+                        } else {
+                            bgmAudio.pause();
+                        }
+                    } else {
+                        startBGM();
+                    }
+                }
+                
+                // 数字键1-3播放对应语音
+                if (e.key >= '1' && e.key <= '3') {
+                    const items = ['dog', 'snowman', 'pig'];
+                    const index = parseInt(e.key) - 1;
+                    if (items[index]) {
+                        playVoice(items[index]);
+                    }
+                }
+                
+                // C键切换蛋糕样式
+                if (e.key === 'c' || e.key === 'C') {
+                    changeCakeStyle();
+                }
+                
+                // D键：调试模式（显示边框）
+                if (e.key === 'd' || e.key === 'D') {
+                    e.preventDefault();
+                    const items = document.querySelectorAll('.interactive-item, .decoration-item');
+                    items.forEach(item => {
+                        item.classList.toggle('debug-border');
+                    });
+                    console.log('调试边框模式已切换');
+                }
+                
+                // P键：检查元素位置和可见性
+                if (e.key === 'p' || e.key === 'P') {
+                    e.preventDefault();
+                    checkElementVisibility();
+                }
+                
+                // A键：显示/隐藏可点击区域
+                if (e.key === 'a' || e.key === 'A') {
+                    e.preventDefault();
+                    document.body.classList.toggle('debug-click-areas');
+                    console.log('可点击区域调试模式已切换');
+                }
+                
+                // T键：测试音频
+                if (e.key === 't' || e.key === 'T') {
+                    e.preventDefault();
+                    console.log('=== 测试小狗音频 ===');
+                    playVoice('dog');
+                }
+            });
+        }
+        
+        // ========== 检查元素可见性 ==========
+        function checkElementVisibility() {
+            console.log('=== 元素可见性检查 ===');
+            console.log('窗口尺寸:', window.innerWidth, 'x', window.innerHeight);
+            
+            const items = [
+                {id: 'dog', name: '小狗'},
+                {id: 'snowman', name: '雪人'}, 
+                {id: 'pig', name: '小猪'},
+                {id: 'cake', name: '蛋糕'}
+            ];
+            
+            items.forEach(item => {
+                const element = document.getElementById(item.id);
+                if (element) {
+                    const rect = element.getBoundingClientRect();
+                    const isVisible = rect.top < window.innerHeight && 
+                                    rect.bottom > 0 && 
+                                    rect.left < window.innerWidth && 
+                                    rect.right > 0;
+                    
+                    console.log(`${item.name} (${item.id}):`);
+                    console.log(`  位置: top=${Math.round(rect.top)}px, left=${Math.round(rect.left)}px`);
+                    console.log(`  尺寸: ${Math.round(rect.width)}x${Math.round(rect.height)}px`);
+                    console.log(`  可见性: ${isVisible ? '✅ 可见' : '❌ 不可见'}`);
+                    
+                    if (!isVisible) {
+                        console.log(`  💡 已添加可点击区域确保功能正常`);
+                    }
+                }
+            });
+        }
+        
+        // ========== 音频功能 ==========
+        function preloadAudio() {
+            console.log('开始预加载音频...');
+            
+            Object.entries(audioFiles).forEach(([key, file]) => {
+                console.log(`预加载: ${key} -> ${file}`);
+                try {
+                    const audio = new Audio();
+                    audio.preload = 'auto';
+                    audio.src = file;
+                    audio.load();
+                } catch (error) {
+                    console.log(`音频预加载错误:`, error);
+                }
+            });
+        }
+        
+        function startBGM() {
+            if (bgmStarted) return;
+            
+            try {
+                bgmAudio = new Audio(audioFiles.bgm);
+                bgmAudio.loop = true;
+                bgmAudio.volume = 0.5;
+                
+                bgmAudio.play().then(() => {
+                    bgmStarted = true;
+                    hintText.textContent = '背景音乐播放中...';
+                    hintText.style.opacity = '0.5';
+                    console.log('BGM开始播放');
+                }).catch(error => {
+                    console.log('BGM播放失败:', error);
+                    hintText.textContent = '点击播放背景音乐（可能需要用户交互）';
+                });
+            } catch (error) {
+                console.error('BGM加载失败:', error);
+            }
+        }
+        
+        function stopBGM() {
+            if (bgmAudio) {
+                bgmAudio.pause();
+                bgmAudio.currentTime = 0;
+                bgmStarted = false;
+                console.log('BGM已停止');
+            }
+        }
+        
+        function playVoice(itemId) {
+            console.log('播放语音:', itemId);
+            
+            const soundFile = audioFiles[itemId];
+            if (!soundFile) {
+                console.log('未找到音频文件:', itemId);
+                return;
+            }
+            
+            // 显示音频指示器
+            const element = document.getElementById(itemId);
+            if (element) {
+                const indicator = element.querySelector('.audio-indicator');
+                if (indicator) {
+                    indicator.style.opacity = '1';
+                    setTimeout(() => {
+                        indicator.style.opacity = '0';
+                    }, 1000);
+                }
+            }
+            
+            // 播放音频
+            try {
+                const audio = new Audio(soundFile);
+                audio.volume = 0.8;
+                audio.play().catch(error => {
+                    console.log('语音播放失败:', error);
+                });
+            } catch (error) {
+                console.error('语音加载失败:', error);
+            }
+        }
+        
+        // ========== 蛋糕样式切换 ==========
+        function changeCakeStyle() {
+            currentCakeStyle = currentCakeStyle % totalCakeStyles + 1;
+            
+            // 更新蛋糕图片
+            const newImage = cakeImages[currentCakeStyle];
+            cakeElement.style.backgroundImage = `url('${newImage}')`;
+            
+            // 更新指示器文本
+            cakeIndicator.textContent = `样式 ${currentCakeStyle}/${totalCakeStyles}`;
+            
+            console.log('切换蛋糕样式:', currentCakeStyle);
+            
+            // 显示指示器
+            cakeIndicator.style.opacity = '0.8';
+            setTimeout(() => {
+                cakeIndicator.style.opacity = '0';
+            }, 1500);
+        }
+        
+        // ========== 页面加载完成后初始化 ==========
+        document.addEventListener('DOMContentLoaded', init);
+        
+        // ========== 页面卸载前停止BGM ==========
+        window.addEventListener('beforeunload', () => {
+            stopBGM();
+        });
+    </script>
+</body>
+</html>

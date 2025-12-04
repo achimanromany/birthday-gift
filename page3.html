@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>手帐互动网页 - 第三页</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  body {
+    background: url('背景2.PNG') no-repeat center center fixed;
+    background-size: cover;
+    font-family: "Microsoft YaHei", sans-serif;
+    overflow: hidden;
+    cursor: pointer;
+  }
+
+  .page-container {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  /* 进度指示器 */
+  #page-indicator {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    color: white;
+    font-size: 18px;
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+    z-index: 10;
+    background: rgba(0,0,0,0.3);
+    padding: 5px 15px;
+    border-radius: 20px;
+  }
+
+  /* 返回按钮 */
+  #back-arrow {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    width: 370px;
+    height: 370px;
+    cursor: pointer;
+    display: block;
+    z-index: 5;
+    background: url('返回.png') no-repeat center center;
+    background-size: contain;
+    filter: drop-shadow(2px 2px 4px rgba(64, 56, 56, 0.3));
+    transition: transform 0.3s;
+    opacity: 0.7;
+  }
+
+  #back-arrow:hover {
+    transform: scale(1.15);
+    opacity: 1;
+  }
+
+  /* 原有样式保持不变... */
+  #handbook { position: relative; width: 100%; max-width: 1400px; z-index: 1; }
+  #paper { position: absolute; width: 85.1%; left: 7.5%; top: 50.1%; transform: translateY(-50%); display: none; z-index: 2; }
+  .decor { position: absolute; display: none; z-index: 3; opacity: 0; transition: all 1s ease; }
+  #decor1 { width: 100%; max-width: 1300px; }
+  #decor2 { width: 100%; max-width: 1230px; }
+  #decor3 { width: 100%; max-width: 1280px; }
+  #text { position: absolute; left: 27%; top: 50%; transform: translateY(-50%); width: 40%; min-width: 200px; display: none; font-size: 20px; font-family: "Comic Sans MS", "华文行楷", cursive; color: #756964; white-space: pre-wrap; line-height: 1.6; z-index: 4; }
+  #arrow { position: fixed; bottom: 20px; right: 20px; width: 370px; height: 370px; cursor: pointer; display: none; z-index: 5; transition: all 0.3s ease; filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3)); }
+  #arrow:hover { transform: scale(1.15); }
+  .shake { display: inline-block; animation: shake 7.5s infinite; }
+  
+  @keyframes bounce { 
+    0% { transform: scale(0.8); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+  }
+  
+  @keyframes breathe {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+  }
+  
+  @keyframes shake {
+    0% { transform: translate(0px,0px) rotate(0deg); }
+    25% { transform: translate(1px,-1px) rotate(-1deg); }
+    50% { transform: translate(-1px,1px) rotate(1deg); }
+    75% { transform: translate(1px,1px) rotate(0deg); }
+    100% { transform: translate(0px,-1px) rotate(-1deg); }
+  }
+  
+  #arrow.show { animation: breathe 2s infinite ease-in-out; }
+</style>
+</head>
+<body>
+
+<!-- 进度指示器 -->
+<div id="page-indicator">3/5</div>
+
+<div class="page-container">
+  <!-- 第三页图片 -->
+  <img id="handbook" src="手账底图.PNG" alt="第三页底图">
+  <img id="paper" src="手账纸2.PNG" alt="第三页手帐纸">
+  <img class="decor" id="decor1" src="3.1.PNG" alt="装饰1第三页">
+  <img class="decor" id="decor2" src="3.2.PNG" alt="装饰2第三页">
+  <img class="decor" id="decor3" src="3.3.PNG" alt="装饰3第三页">
+  <div id="text"></div>
+  
+  <!-- 前进箭头 -->
+  <img id="arrow" src="跳转.PNG" alt="下一页">
+  
+  <!-- 返回箭头 -->
+  <div id="back-arrow" src="返回.PNG" ></div>
+</div>
+
+<script>
+// 页面元素
+const paper = document.getElementById('paper');
+const decor1 = document.getElementById('decor1');
+const decor2 = document.getElementById('decor2');
+const decor3 = document.getElementById('decor3');
+const textDiv = document.getElementById('text');
+const arrow = document.getElementById('arrow');
+const backArrow = document.getElementById('back-arrow');
+
+// 第三页文字内容
+const formattedMessage = [
+  "虽然虎的生日在冷冷的冬天",
+  "",
+  "但一直是我们温暖可爱的胖虎~",
+  "",
+  "",
+  "和你做朋友真是太好了捏",
+  "希望你能一直开开心心"
+];
+
+// 第三页装饰物位置（根据图片调整）
+const decorPositions = {
+  decor1: { left: '10.8%', top: '8%', rotation: '0deg' },
+  decor2: { left: '11%', top: '12.58%', rotation: '0deg' },
+  decor3: { left: '13%', top: '12%', rotation: '0deg' }
+};
+
+// 打字效果变量
+let step = 0;
+let lineIndex = 0;
+let charIndex = 0;
+
+// 打字函数
+function typeWriter() {
+  if (lineIndex < formattedMessage.length) {
+    const line = formattedMessage[lineIndex];
+    
+    if (charIndex < line.length) {
+      let span = document.createElement('span');
+      span.textContent = line[charIndex];
+      span.className = 'shake';
+      textDiv.appendChild(span);
+      
+      charIndex++;
+      setTimeout(typeWriter, 120);
+    } else {
+      if (lineIndex < formattedMessage.length - 1) {
+        textDiv.appendChild(document.createElement('br'));
+      }
+      
+      lineIndex++;
+      charIndex = 0;
+      setTimeout(typeWriter, 200);
+    }
+  } else {
+    setTimeout(() => {
+      arrow.style.display = 'block';
+      arrow.classList.add('show');
+    }, 500);
+  }
+}
+
+// 页面点击事件
+document.body.addEventListener('click', (e) => {
+  // 防止点击按钮时触发页面点击
+  if (e.target.id !== 'arrow' && e.target.id !== 'back-arrow') {
+    step++;
+    
+    if(step === 1){
+      paper.style.display = 'block';
+    } 
+    else if(step === 2){
+      // 装饰物动画
+      setTimeout(() => {
+        decor1.style.display = 'block';
+        decor1.style.left = decorPositions.decor1.left;
+        decor1.style.top = decorPositions.decor1.top;
+        decor1.style.transform = `rotate(${decorPositions.decor1.rotation})`;
+        decor1.style.opacity = '1';
+      }, 0);
+
+      setTimeout(() => {
+        decor2.style.display = 'block';
+        decor2.style.left = decorPositions.decor2.left;
+        decor2.style.top = decorPositions.decor2.top;
+        decor2.style.transform = `rotate(${decorPositions.decor2.rotation})`;
+        decor2.style.opacity = '1';
+      }, 500);
+
+      setTimeout(() => {
+        decor3.style.display = 'block';
+        decor3.style.left = decorPositions.decor3.left;
+        decor3.style.top = decorPositions.decor3.top;
+        decor3.style.transform = `rotate(${decorPositions.decor3.rotation})`;
+        decor3.style.opacity = '1';
+      }, 1000);
+    }
+    else if(step === 3){
+      textDiv.style.display = 'block';
+      textDiv.innerHTML = '';
+      
+      lineIndex = 0;
+      charIndex = 0;
+      
+      typeWriter();
+    }
+  }
+});
+
+// 前进到第四页
+arrow.addEventListener('click', (e) => {
+  e.stopPropagation();
+  window.location.href = 'page4.html'; // 跳转到第四页
+});
+
+// 返回到第二页
+backArrow.addEventListener('click', (e) => {
+  e.stopPropagation();
+  window.location.href = 'page2.html'; // 返回第二页
+});
+
+// 箭头图片加载失败备用
+arrow.addEventListener('error', function() {
+  this.alt = '➡';
+  this.style.width = 'auto';
+  this.style.height = 'auto';
+  this.style.fontSize = '32px';
+  this.style.color = '#fff';
+  this.style.textShadow = '2px 2px 4px rgba(0,0,0,0.5)';
+  this.style.display = 'flex';
+ this.style.alignItems = 'center';
+  this.style.justifyContent = 'center';
+});
+
+// 返回箭头图片加载失败备用
+backArrow.addEventListener('error', function() {
+  this.innerHTML = '←';
+  this.style.background = 'none';
+  this.style.color = '#fff';
+  this.style.fontSize = '32px';
+  this.style.display = 'flex';
+  this.style.alignItems = 'center';
+  this.style.justifyContent = 'center';
+  this.style.textShadow = '2px 2px 4px rgba(0,0,0,0.5)';
+});
+</script>
+
+</body>
+</html>

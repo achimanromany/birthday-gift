@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>生日页面</title>
+
+<style>
+    body {
+    margin: 0;
+    padding: 0;
+    background: url("背景1.png") center center/cover no-repeat;
+    background-position: center 15%;   
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: "Comic Sans MS","微软雅黑";
+}
+
+    .wrapper {
+        display: flex;
+        gap: 150px;
+        align-items: center;
+    }
+
+    .char {
+        position: relative;
+        cursor: pointer;
+        transition: transform 0.3s ease;
+    }
+
+    .char img {
+        width: 280px;
+        transition: transform 0.3s ease;
+        display: block;
+    }
+
+    /* 贴纸描边图 */
+    .outline {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 280px;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+    }
+
+    /* 悬停显示投影 */
+    .char:hover .outline {
+        opacity: 1;
+        filter: drop-shadow(8px 8px 3px rgba(0,0,0,0.25));
+    }
+</style>
+</head>
+
+<body>
+
+<!-- 背景音乐 -->
+<audio id="bgm" src="生日快乐背景音.mp3"></audio>
+
+<div class="wrapper">
+
+    <!-- 夏彦 -->
+    <div class="char" id="xia"
+        style="margin-top: 300px;">
+        <img id="xiaImg" src="xia1.png">
+        <img class="outline" id="xiaOutline" src="xia_outline.png">
+    </div>
+
+    <!-- 黎深 -->
+    <div class="char" id="li">
+        <img id="liImg" src="li1.png"
+        style="margin-top: 300px;">
+        <img class="outline" id="liOutline" src="li_outline.png">
+    </div>
+
+</div>
+<!-- 下一页箭头 -->
+<img id="nextArrow" src="跳转.PNG" 
+     style="position: fixed; right: 1px; bottom: 1px; width: 500px; cursor: pointer; z-index: 9999;"
+     onclick="goToPage2()">
+
+<script>
+    /* 角色图片组 */
+    const xiaImgs = ["xia1.png","xia2.png","xia3.png","xia4.png","xia5.png","xia6.png"];
+    const liImgs  = ["li1.png","li2.png","li3.png","li4.png","li5.png","li6.png"];
+
+    let xiaIndex = 0;
+    let liIndex = 0;
+
+    const xiaImg = document.getElementById("xiaImg");
+    const liImg = document.getElementById("liImg");
+    const bgm = document.getElementById("bgm");
+
+    /* 夏彦点击 */
+    document.getElementById("xia").onclick = function() {
+        bgm.play(); 
+
+        if (xiaIndex < 5) {
+            xiaIndex++;
+            liIndex = Math.max(0, liIndex - 1);
+        }
+
+        xiaImg.src = xiaImgs[xiaIndex];
+        liImg.src = liImgs[liIndex];
+
+        xiaImg.style.transform = `scale(${1 + xiaIndex * 0.2})`;
+        liImg.style.transform  = `scale(${1 + liIndex * 0.2})`;
+    }
+
+    /* 黎深点击 */
+    document.getElementById("li").onclick = function() {
+        bgm.play();  
+
+        if (liIndex < 5) {
+            liIndex++;
+            xiaIndex = Math.max(0, xiaIndex - 1);
+        }
+
+        liImg.src = liImgs[liIndex];
+        xiaImg.src = xiaImgs[xiaIndex];
+
+        liImg.style.transform  = `scale(${1 + liIndex * 0.2})`;
+        xiaImg.style.transform = `scale(${1 + xiaIndex * 0.2})`;
+
+    }
+    function goToPage2() {
+    window.location.href = "page2.html"; // 改成你第二页的文件名
+}
+</script>
+
+</body>
+</html>
+  

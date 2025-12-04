@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>前面是什么呢</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background-color: #000;
+            overflow: hidden;
+            height: 100vh;
+            font-family: "Microsoft YaHei", sans-serif;
+        }
+        
+        /* 拉绳开关容器 */
+        #pull-switch-container {
+            position: fixed;
+            top: -380px;
+            right: 30px;
+            z-index: 100;
+            width: 1360px; /* 容器大小控制悬停区域 */
+            height: 1360px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        /* 拉绳图片 - 实际的点击区域 */
+        #pull-switch {
+            width: 1360px; /* 图片实际大小 */
+            height: 1360px; /* 图片实际大小 */
+            background-image: url('拉绳开关.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            position: relative;
+            transition: transform 0.3s ease;
+            cursor: pointer;
+            z-index: 2;
+        }
+        
+        /* 只在拉绳图片上悬停时有效 */
+        #pull-switch:hover {
+            transform: scale(1.1);
+        }
+        
+        /* 光圈效果 - 作为拉绳的子元素 */
+        #pull-switch::before {
+            content: '';
+            position: absolute;
+            top: -20%;
+            left: 30%;
+            transform: translate(-50%, -50%);
+            width: 120px; /* 光圈大小 */
+            height: 120px;
+            border-radius: 50%;
+            background: radial-gradient(circle, 
+                rgba(255, 209, 102, 0.4) 0%, 
+                rgba(255, 209, 102, 0.3) 30%,
+                rgba(255, 209, 102, 0.2) 50%,
+                rgba(255, 209, 102, 0) 70%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: -1;
+            pointer-events: none; /* 防止干扰鼠标事件 */
+        }
+        
+        /* 只在拉绳图片上悬停时显示光圈 */
+        #pull-switch:hover::before {
+            opacity: 1;
+            animation: pulse 2s infinite ease-in-out;
+        }
+        
+        /* 返回按钮 */
+        #back-btn {
+            position: fixed;
+            top: 600px;
+            left: 20px;
+            width: 360px;
+            height: 360px;
+            background: url('返回.png') no-repeat center center;
+            background-size: contain;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: all 0.3s;
+        }
+        
+        #back-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+        
+        /* 光圈脉动动画 */
+        @keyframes pulse {
+            0%, 100% {
+                transform: translate(-50%, -50%) scale(1);
+            }
+            50% {
+                transform: translate(-50%, -50%) scale(1.1);
+            }
+        }
+        
+        /* 点击动画 */
+        @keyframes clickEffect {
+            0% {
+                transform: scale(1.1);
+            }
+            50% {
+                transform: rotate(15deg) scale(1.05);
+            }
+            100% {
+                transform: rotate(0deg) scale(1.1);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 返回按钮 -->
+    <div id="back-btn" title="返回蛋糕制作"></div>
+    
+    <!-- 拉绳开关 -->
+    <div id="pull-switch-container">
+        <div id="pull-switch" title="点这里！"></div>
+    </div>
+
+    <script>
+        // DOM元素
+        const backBtn = document.getElementById('back-btn');
+        const pullSwitch = document.getElementById('pull-switch');
+        
+        // 返回第四页
+        backBtn.addEventListener('click', () => {
+            window.location.href = 'page4.html';
+        });
+        
+        // 点击拉绳跳转到第六页
+        pullSwitch.addEventListener('click', () => {
+            // 添加点击动画效果
+            pullSwitch.style.animation = 'clickEffect 0.5s ease';
+            
+            // 延迟跳转，让用户看到效果
+            setTimeout(() => {
+                window.location.href = 'page6.html';
+            }, 500);
+        });
+        
+        // 动画结束后恢复
+        pullSwitch.addEventListener('animationend', () => {
+            pullSwitch.style.animation = '';
+        });
+        
+        // 键盘快捷键
+        document.addEventListener('keydown', (e) => {
+            // ESC键返回第四页
+            if (e.key === 'Escape') {
+                window.location.href = 'page4.html';
+            }
+            // 空格键或回车键点击拉绳
+            if (e.key === ' ' || e.key === 'Enter') {
+                pullSwitch.click();
+            }
+        });
+        
+        console.log('第五页加载完成，等待点击拉绳...');
+    </script>
+</body>
+</html>
